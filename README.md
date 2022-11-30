@@ -19,9 +19,13 @@ The procedure is aimed at spliting one long document into small pieces. Since th
 In this step, we use a DeBERTa model to extract features from passage blocks. We use the same context pooling method from DeBERTa original paper [1]. To aggregate the features of split blocks, a one-layer Bidirectional LSTM is applied to capture the temporal information of all blocks. Then the average pooling of the last hidden state of LSTM is used as the document feature.
 
 ### Step 3. Label Retrieve
-After get the representation of the entire document, we use the feature to retrieve its corresponding label. The label set is organized as a hierarchical structure, for example, the first level contains labels *A,B,C,D* and the second level contains *A-a, A-b, A-c, B-a, B-b, C-a, C-b, C-c, C-d...*. We introduce an 'unknown' token to represent the terminal of label extension, for example, *A-unknown* means the sample has only the first level label and we don't need to consider its second level label. 
+After get the representation of the entire document, we use the feature to retrieve its corresponding label. The label set is organized as a hierarchical structure, for example, the first level contains labels *A,B,C,D* and the second level contains *A-a, A-b, A-c, B-a, B-b, C-a, C-b, C-c, C-d...*. We introduce an 'unknown' token to represent the terminal of label extension, for example, *A-unknown* means the sample has only the first level label *A* and we don't need to consider its second level label. 
 
-To take the advantages of the label's name, which is meaningful, we don't use one-hot vector to represent each class. Instead, we use the inner-product similarity to get the logit of each class. Then we decode the label from the first level to higher level, and stop when we meet the 'unknown' token.
+To take the advantages of the label's name, which is meaningful, we don't use one-hot vector to represent each class. Instead, we use the inner-product similarity to get the logit of each class: 
+
+\[logit(y|x) = Model(x) \cdot DeBERTa(y)\]
+
+Then we decode the label from the first level to higher level, and stop when we meet the 'unknown' token.
 
 ## Sub-directories
 
@@ -57,4 +61,5 @@ HMC is licensed under the Apache License, Version 2.0: http://www.apache.org/lic
 
 [1]. He, Pengcheng, et al. "Deberta: Decoding-enhanced bert with disentangled attention." arXiv preprint arXiv:2006.03654 (2020).
 
+[2]. (**Acknowledgement**) The pre-trained weights are downloaded from https://huggingface.co/IDEA-CCNL/Erlangshen-DeBERTa-v2-320M-Chinese.
 
