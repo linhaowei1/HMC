@@ -3,8 +3,8 @@
 
 This directory contains the code and resources of the project: **Hierarchical Multi-label Classification (HMC)**. It is a final course project of *Natural Language Processing and Deep Learning, 2022 Fall*.
 
-1. In this project, a DeBERTa-based model is implemented to solve the HMC problem via hierarchical label retrive. 
-2. Since the data of this task are long documents (the longest document has more than 10,000 tokens after tokenization), a slide-window based hierarchical encoder is implemented using LSTM.
+1. In this project, a DeBERTa-based model is implemented to solve the HMC problem via hierarchical label retrieve. 
+2. Since the data of this task are long documents (the longest document has more than 10,000 tokens after tokenization), a slide-window based hierarchical encoder is implemented using LSTM to address this problem.
 3. Please contact Haowei Lin (linhaowei@pku.edu.cn) if you have issues using this software.
 
 ## Overview of the Model
@@ -19,13 +19,13 @@ The procedure is aimed at spliting one long document into small pieces. Since th
 In this step, we use a DeBERTa model to extract features from passage blocks. We use the same context pooling method from DeBERTa original paper [1]. To aggregate the features of split blocks, a one-layer Bidirectional LSTM is applied to capture the temporal information of all blocks. Then the average pooling of the last hidden state of LSTM is used as the document feature.
 
 ### Step 3. Label Retrieve
-After get the representation of the entire document, we use the feature to retrieve its corresponding label. The label set is organized as a hierarchical structure, for example, the first level contains labels *A,B,C,D* and the second level contains *A-a, A-b, A-c, B-a, B-b, C-a, C-b, C-c, C-d...*. We introduce an 'unknown' token to represent the terminal of label extension, for example, *A-unknown* means the sample has only the first level label *A* and we don't need to consider its second level label. 
+After obtaining the representation of the entire document, we use the feature to retrieve its corresponding label. The label set is organized as a hierarchical structure, for example, the first level contains labels *A,B,C,D* and the second level contains *A-a, A-b, A-c, B-a, B-b, C-a, C-b, C-c, C-d...*. We introduce an 'unknown' token to represent the terminal of label extension, for example, *A-unknown* means the sample has only the first level label *A* and we don't need to consider its second level label. 
 
-To take the advantages of the label's name, which is meaningful, we don't use one-hot vector to represent each class. Instead, we use the inner-product similarity to get the logit of each class: 
+To take the advantages of the label's name, which is meaningful, we don't use one-hot vectors to represent each class. Instead, we use inner-product similarity to get the logit of each class: 
 
 $$logit(y|x) = Model(x) \cdot DeBERTa(y)$$
 
-Then we decode the label from the first level to higher level, and stop when we meet the 'unknown' token.
+Then we decode the label from the first level to the higher levels, and stop when we meet the 'unknown' token.
 
 ## Sub-directories
 
@@ -38,7 +38,7 @@ Then we decode the label from the first level to higher level, and stop when we 
 
 ## Code Usage
 
-To run the code, it's suggested to install the relevant python packages in a isolated conda environment. The `requirements.txt` is provided for a quick start.
+To run the code, it's suggested to install the relevant python packages in an isolated conda environment. The `requirements.txt` is provided for a quick start.
 - Run `pip install -r requirements.txt` after creating a conda environment to get necessary packages installed.
 
 - run the following command to train the model.
@@ -53,7 +53,7 @@ To run the code, it's suggested to install the relevant python packages in a iso
   bash scripts/pred.sh
   ```
 
-Then the scripts will automatically save results to `./log` dir.
+Then the scripts will automatically save the results to `./log` dir.
 
 ## License
 
