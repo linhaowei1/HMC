@@ -4,6 +4,7 @@ from utils import utils
 from accelerate import Accelerator, DistributedType, DistributedDataParallelKwargs
 from accelerate.utils import set_seed
 import os
+import torch
 import math
 from dataloader.data import get_dataset
 from torch.utils.data import DataLoader
@@ -35,30 +36,10 @@ accelerator.wait_for_everyone()
 args.relation = utils.Relation()
 dataset = get_dataset(args)
 model, tokenizer = utils.lookfor_model(args)
-
-def block_tokenize_training(example):
-    inputs = tokenizer(example['text'], truncation=False)
-    example['input_ids'] = []
-    example['attention_mask'] = []
-    for i in range(len(inputs['input_ids'])):
-        input_ids_list = []
-        attention_mask_list = []
-        for w in range(min(math.ceil(len(inputs['input_ids'][i]) / args.split_len), 25)):
-            if w == 0:
-                input_ids = inputs['input_ids'][i][:args.split_len]
-                attention_mask = inputs['attention_mask'][i][:args.split_len]
-            else:
-                window = args.split_len - args.overlap_len
-                input_ids = inputs['input_ids'][i][w * window: w * window + args.split_len]
-                attention_mask = inputs['attention_mask'][i][w * window: w * window + args.split_len]
-            input_ids_list.append(input_ids + [tokenizer.pad_token_id] * (args.split_len - len(input_ids)))
-            attention_mask_list.append(attention_mask + [0] * (args.split_len - len(input_ids)))
-        example['input_ids'].append(input_ids_list)
-        example['attention_mask'].append(attention_mask_list)
-    example['first_label'] = [args.relation.label2idx['first'][l] for l in example['first_label']]
-    example['second_label'] = [args.relation.label2idx['second'][l] for l in example['second_label']]
-    example['third_label'] = [args.relation.label2idx['third'][l] for l in example['third_label']]
-    return example
+state_dict = torch.load(os.path.join(args.model_name_or_path, 'pytorch_model.bin'), map_location='cpu')
+model.first_label = state_dict['first_label'].to(accelerator.device)
+model.second_label = state_dict['second_label'].to(accelerator.device)
+model.third_label = state_dict['third_label'].to(accelerator.device)
 
 def block_tokenize_testing(example):
     inputs = tokenizer(example['text'], truncation=False)
@@ -79,16 +60,18 @@ def block_tokenize_testing(example):
             attention_mask_list.append(attention_mask + [0] * (args.split_len - len(input_ids)))
         example['input_ids'].append(input_ids_list)
         example['attention_mask'].append(attention_mask_list)
-    example['first_label'] = [args.relation.label2idx['first'][l] for l in example['first_label']]
-    example['second_label'] = [args.relation.label2idx['second'][l] for l in example['second_label']]
-    example['third_label'] = [args.relation.label2idx['third'][l] for l in example['third_label']]
     return example
-train_dataset = dataset['train'].map(block_tokenize_training, batched=True)
-test_dataset = dataset['test'].map(block_tokenize_testing, batched=True)
-train_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask', 'first_label', 'second_label', 'third_label'])
-test_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask', 'first_label', 'second_label', 'third_label'])
-train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True, drop_last=False, num_workers=1)
+
+test_dataset = dataset['pred'].map(block_tokenize_testing, batched=True)
+
+test_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask'])
+
 test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, drop_last=False, num_workers=1)
 
 appr = Appr(args)
-appr.train(model, train_loader, test_loader, accelerator)
+PRED = appr.pred(model, test_loader, accelerator)
+with open(os.path.join(args.model_name_or_path, 'pred'), 'w') as f:
+    import json
+    json.dump(
+        PRED, f, ensure_ascii=False
+    )

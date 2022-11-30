@@ -1,8 +1,8 @@
 import json
 import os
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 def get_dataset(args):
-    with open('/data/haowei/haowei/dl/train_data_20220406_10w.txt','r') as f:
+    with open('/data1/haowei/haowei/dl/train_data_20220406_10w.txt','r') as f:
         data = [eval(x) for x in f.readlines()]
     text = [x['aq'] for x in data]
     labels = [args.relation.prepare_label(x['aydj'], x['ay']) for x in data]
@@ -17,6 +17,15 @@ def get_dataset(args):
             'third_label': third_label
         }
     )
-    dataset = dataset.train_test_split(test_size=0.05)
-    return dataset
+    dataset = dataset.train_test_split(test_size=0.0005)
+    with open('/home/haowei/haowei/NLP/tools/test_data_2022_1w.txt','r') as f:
+        data = [eval(x) for x in f.readlines()]
+    text = [x['aq'] for x in data]
+    return DatasetDict(
+        {
+            'train': dataset['train'],
+            'test': dataset['test'],
+            'pred': Dataset.from_dict({'text': text})
+        }
+    )
 

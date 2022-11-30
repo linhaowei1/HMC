@@ -5,7 +5,7 @@ class Relation:
 
     def __init__(self, file_path='tools/case_classification.txt'):
 
-        relation = {'未知':{'未知':["未知"]}}
+        relation = {}
         self.tree = {}
         with open(file_path, 'r') as f:
             lst = f.readlines()
@@ -70,7 +70,7 @@ class Relation:
 
 def lookfor_model(args):
     model = DebertaV2ForHMC.from_pretrained(args.model_name_or_path, args=args)
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path)
+    tokenizer = AutoTokenizer.from_pretrained('IDEA-CCNL/Erlangshen-DeBERTa-v2-320M-Chinese')
     label_func = lambda label: tokenizer(
         label,
         padding="max_length", 
