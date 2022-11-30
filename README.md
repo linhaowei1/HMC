@@ -23,7 +23,7 @@ After get the representation of the entire document, we use the feature to retri
 
 To take the advantages of the label's name, which is meaningful, we don't use one-hot vector to represent each class. Instead, we use the inner-product similarity to get the logit of each class: 
 
-\[logit(y|x) = Model(x) \cdot DeBERTa(y)\]
+$$logit(y|x) = Model(x) \cdot DeBERTa(y)$$
 
 Then we decode the label from the first level to higher level, and stop when we meet the 'unknown' token.
 
