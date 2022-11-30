@@ -9,7 +9,7 @@ This directory contains the code and resources of the project: **Hierarchical Mu
 
 ## Overview of the Model
 <p align="center">
-<img  src="figure/model.pdf" width="700"> 
+<img  src="figures/model.pdf" width="700"> 
 </p>
 
 ### Step 1. Passage Split
